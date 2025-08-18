@@ -222,6 +222,8 @@ window.addEventListener('load', function() {
       chrome.runtime.onMessage.addListener((msg)=>{
         if(msg.type === "CREATE_IFRAME" && msg.pdb){
           createPreviewWindow(`https://www.rcsb.org/3d-view/${msg.pdb}`);
+        } else if (msg.type === "CREATE_PDBFRAME" && msg.pdb){
+          createPreviewWindow(`https://www.rcsb.org/structure/${msg.pdb}`);
         }
       });
     }
