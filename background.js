@@ -1,18 +1,59 @@
 chrome.runtime.onInstalled.addListener(() => {
-    chrome.contextMenus.create({
-      id: "open-pdb-3d",
-      title: "打開3D結構預覽",
-      contexts: ["link"]
+  /*
+  chrome.contextMenus.create({
+    id: "helloMenu",
+    title: "打招呼",
+    contexts: ["link"]
+  });
+  */
+  chrome.contextMenus.create({
+    id: "open3DTab",
+    title: "新分頁開啟 3D viewer",
+    contexts: ["link"]
+  });
+  chrome.contextMenus.create({
+    id: "open3DFrame",
+    title: "iframe開啟 3D viewer",
+    contexts: ["link"]
+  })
+});
+
+// 處理點擊
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  /*
+  if (info.menuItemId === "helloMenu") {
+    
+    chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: (linkUrl) => {
+        alert("你剛剛右鍵點的連結是：\n" + linkUrl);
+      },
+      args: [info.linkUrl]
     });
-  });
-  
-  chrome.contextMenus.onClicked.addListener((info, tab) => {
-    if (info.menuItemId === "open-pdb-3d" && info.linkUrl) {
-      const match = info.linkUrl.match(/structure\/([1-9][A-Za-z0-9]{3})/);
-      if (match) {
-        const pdbId = match[1];
-        chrome.tabs.sendMessage(tab.id, { action: "openPDB3D", pdbId: pdbId });
-      }
+  }
+  */
+  if (info.menuItemId === "open3DTab") {
+    //console.log("原始連結:", info.linkUrl);
+    const pdb = extractPDBId(info.linkUrl);
+    //console.log("抓到的 PDB ID:", id);
+    if (pdb) {
+      chrome.tabs.create({ url: `https://www.rcsb.org/3d-view/${pdb}` });
     }
-  });
-  
+  }
+
+  if (info.menuItemId === "open3DFrame") {
+    //console.log("原始連結:", info.linkUrl);
+    const pdb = extractPDBId(info.linkUrl);
+    //console.log("抓到的 PDB ID:", pdb);
+    chrome.tabs.sendMessage(tab.id,{
+      type : "CREATE_IFRAME",
+      pdb : pdb
+    })
+  }
+});
+
+function extractPDBId(url) {
+  let m = url.match(/(?:structure|3d-view)\/([0-9a-z]{4})(?:[/?#]|$)/i);
+  if (m) return m[1].toUpperCase();
+  return null;
+}

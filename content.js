@@ -123,21 +123,26 @@ function createPreviewWindow(url) {
     }
   });
 }
-
+//滑鼠滑過去顯示解析度和論文標題
 function fetchPDBInfo(pdbId, linkElement) {
+  //用fetch從API抓資料
   fetch(`https://data.rcsb.org/rest/v1/core/entry/${pdbId}`)
     .then(response => response.json())
     .then(data => {
+      //data為json格式
+      //console.log(data);
       const title = data.struct?.title || 'Unknown Title';
       const resolution = data.rcsb_entry_info?.resolution_combined?.[0]
         ? `${data.rcsb_entry_info.resolution_combined[0]} Å`
         : 'No resolution data';
-      linkElement.title = `解析度: ${resolution}\n標題: ${title}`;
+      const classification = data.struct_keywords?.pdbx_keywords || 'Unknown';
+      linkElement.title = `解析度: ${resolution}\n 分類 ${classification}\n 標題: ${title}`;
     })
     .catch(error => {
       console.error('PDB資料抓取失敗:', error);
       linkElement.title = '無法取得PDB資訊';
     });
+    //console.log(data);
 }
 
 function linkifyPDB(node) {
@@ -146,9 +151,9 @@ function linkifyPDB(node) {
       return;
     }
     const replacedHTML = node.textContent.replace(PDB_PATTERN, (match) => {
-      // 加這一段排除4個數字
+      // 排除4個數字(年份)
       if (/^\d{4}$/.test(match)) {
-        return match; // 是年份（4個數字），直接跳過，不改成連結
+        return match;
       }
       return `<a href="https://www.rcsb.org/structure/${match}" target="_blank" style="color:blue; text-decoration:underline;" data-pdb="${match}">${match}</a>`;
     });
@@ -176,9 +181,16 @@ window.addEventListener('load', function() {
       if (target) {
         linkifyPDB(target);
       }
-
+      //管理click事件
       document.addEventListener('click', function (e) {
         if (e.target.tagName === 'A' && e.target.dataset.pdb) {
+          if (e.button === 0){
+              e.preventDefault();
+              const pdbId = e.target.dataset.pdb;
+              createPreviewWindow(`https://www.rcsb.org/structure/${pdbId}`);
+            }
+          //click事件只要開啟PDB頁面就好
+          /*
           if (e.button === 1) {
             e.preventDefault();
             const pdbId = e.target.dataset.pdb;
@@ -188,14 +200,28 @@ window.addEventListener('load', function() {
             const pdbId = e.target.dataset.pdb;
             createPreviewWindow(`https://www.rcsb.org/structure/${pdbId}`);
           }
+          */
+        }
+      });
+      //管理hover操作
+      document.addEventListener('mouseover', function (e) {
+        //滑到<a>的時候抓取PDB的資訊 顯示成tooltip
+        //e是事件物鍵, 抓取e滑到的A的物件資訊
+        if (e.target.tagName === 'A' && e.target.dataset.pdb && !e.target.dataset.tooltipLoaded) {
+          //e.target.tagName === 'A' herf物件
+          //e.target.dataset.pdb 有個data-pdb屬性
+          //!e.target.dataset.tooltipLoaded 還沒加入過tooltip
+          const pdbId = e.target.dataset.pdb;
+          fetchPDBInfo(pdbId, e.target); //抓屬性 & 設到 title 屬性上。
+          e.target.dataset.tooltipLoaded = 'true';
+          //標記這個 <a> 已經載入過 tooltip。之後就不會再重複發送 fetch。
         }
       });
 
-      document.addEventListener('mouseover', function (e) {
-        if (e.target.tagName === 'A' && e.target.dataset.pdb && !e.target.dataset.tooltipLoaded) {
-          const pdbId = e.target.dataset.pdb;
-          fetchPDBInfo(pdbId, e.target);
-          e.target.dataset.tooltipLoaded = 'true';
+      //管理background.js的msg
+      chrome.runtime.onMessage.addListener((msg)=>{
+        if(msg.type === "CREATE_IFRAME" && msg.pdb){
+          createPreviewWindow(`https://www.rcsb.org/3d-view/${msg.pdb}`);
         }
       });
     }
