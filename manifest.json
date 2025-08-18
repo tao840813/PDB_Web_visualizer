@@ -1,0 +1,21 @@
+{
+    "manifest_version": 3,
+    "name": "PDB Linkifier",
+    "version": "1.0.0",
+    "description": "Automatically linkify PDB IDs and preview structures with a floating window.",
+    "permissions": [
+      "contextMenus",
+      "activeTab",
+      "scripting"
+    ],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "content_scripts": [
+      {
+        "matches": ["<all_urls>"],
+        "js": ["content.js"]
+      }
+    ]
+  }
+  
