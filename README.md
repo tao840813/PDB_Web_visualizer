@@ -4,5 +4,5 @@ Chrome-like 插件
 
 
 # TODO
-* 檢查目前的問題
+* 右鍵的的3D-viwer不能使用
 * 加一個連接到sabdab
