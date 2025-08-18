@@ -1,7 +1,7 @@
 # PDB_liker
 Chromium-extension For whose tabs are always messed up
 
-Fetching four letters on the website and making a frame of RCSB PDB page / PDB viewer
+Fetching four letters on the website and making a frame of RCSB PDB page / 3D viewer / SabDab
 
 available on:
 ```
